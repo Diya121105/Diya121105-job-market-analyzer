@@ -34,6 +34,34 @@ def process_jobs(jobs):
         })
     return pd.DataFrame(processed)
 
+def clean_data(df):
+    # Remove duplicate jobs
+    df = df.drop_duplicates(subset=["title", "company"])
+    
+    # Clean job titles - remove extra spaces and special characters
+    df["title"] = df["title"].str.strip()
+    df["title"] = df["title"].str.replace(r'[^\w\s]', '', regex=True)
+    
+    # Categorize seniority level from title
+    def get_seniority(title):
+        title = title.lower()
+        if any(word in title for word in ["senior", "sr", "lead", "principal"]):
+            return "Senior"
+        elif any(word in title for word in ["junior", "jr", "associate", "intern"]):
+            return "Junior"
+        else:
+            return "Mid Level"
+    
+    df["seniority"] = df["title"].apply(get_seniority)
+    
+    # Clean location - keep only city/state
+    df["location"] = df["location"].str.strip()
+    
+    # Replace empty strings with N/A
+    df = df.replace("", "N/A")
+    
+    return df
+
 def extract_skills(df):
     skills_list = [
         "python", "sql", "machine learning", "django", "flask",
@@ -59,9 +87,17 @@ pages = st.sidebar.slider("Pages to fetch", 1, 5, 3)
 
 if st.sidebar.button("Fetch Jobs"):
     with st.spinner("Fetching jobs..."):
-        jobs = fetch_jobs(keyword, country, pages)
-        df = process_jobs(jobs)
-        skills = extract_skills(df)
+        try:
+            jobs = fetch_jobs(keyword, country, pages)
+            if not jobs:
+                st.error("No jobs found. Try a different keyword or country.")
+                st.stop()
+            df = process_jobs(jobs)
+            df = clean_data(df)
+            skills = extract_skills(df)
+        except Exception as e:
+            st.error(f"Something went wrong: {e}")
+            st.stop()
 
     # Metrics
     col1, col2, col3 = st.columns(3)
@@ -103,6 +139,27 @@ if st.sidebar.button("Fetch Jobs"):
     )
     st.plotly_chart(fig3, use_container_width=True)
 
+    # Seniority breakdown
+    st.subheader("Seniority Level Breakdown")
+    seniority_counts = df["seniority"].value_counts()
+    fig4 = px.pie(
+        values=seniority_counts.values,
+        names=seniority_counts.index,
+        title="Jobs by Seniority Level",
+        color_discrete_sequence=px.colors.sequential.RdBu
+    )
+    st.plotly_chart(fig4, use_container_width=True)
+
     # Raw data
     st.subheader("Raw Job Listings")
-    st.dataframe(df[["title", "company", "location"]], use_container_width=True)
+    st.dataframe(df[["title", "company", "location", "seniority"]], use_container_width=True)
+
+    # CSV Export
+    st.subheader("Download Results")
+    csv = df[["title", "company", "location", "seniority"]].to_csv(index=False)
+    st.download_button(
+        label="Download as CSV",
+        data=csv,
+        file_name="job_results.csv",
+        mime="text/csv"
+    )
