@@ -1,11 +1,15 @@
-# Job Market Trend Analyzer
+# 🔍 Job Market Trend Analyzer
+🔴 Live Demo: https://diya121105-job-market-analyzer-snd3bwhfbovnfmrcwwwhbo.streamlit.app/
+
 A real-time job market analysis dashboard built with Python and Streamlit.
 
 ## Features
 - Fetches live job listings using Adzuna API
-- Analyzes most in-demand skills
+- Cleans and processes raw data
+- Extracts most in-demand skills from job descriptions
 - Visualizes top hiring locations and companies
-- Interactive search by keyword and country
+- Breaks down seniority levels (Junior/Mid/Senior)
+- Export results as CSV
 
 ## Tech Stack
 Python, Streamlit, Pandas, Plotly, Requests
