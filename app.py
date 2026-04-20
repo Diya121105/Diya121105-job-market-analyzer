@@ -6,7 +6,7 @@ import plotly.express as px
 APP_ID = "6a00f514"
 API_KEY = "e1c19bb14cb5218c8f7ac33e0e88892c"
 
-def fetch_jobs(keyword="python", country="in", pages=3):
+def fetch_jobs(keyword="python", country="in", pages=5):
     all_jobs = []
     for page in range(1, pages + 1):
         url = f"https://api.adzuna.com/v1/api/jobs/{country}/search/{page}"
@@ -14,7 +14,7 @@ def fetch_jobs(keyword="python", country="in", pages=3):
             "app_id": APP_ID,
             "app_key": API_KEY,
             "what": keyword,
-            "results_per_page": 20
+            "results_per_page": 50
         }
         response = requests.get(url, params=params)
         data = response.json()
@@ -105,7 +105,7 @@ st.markdown("Analyze real-time job trends powered by Adzuna API")
 st.sidebar.header("Search Settings")
 keyword = st.sidebar.text_input("Job Keyword", value="python")
 country = st.sidebar.selectbox("Country", ["in", "us", "gb"], index=0)
-pages = st.sidebar.slider("Pages to fetch", 1, 5, 3)
+pages = st.sidebar.slider("Pages to fetch", 1, 10, 5)
 
 if st.sidebar.button("Fetch Jobs"):
     with st.spinner("Fetching jobs..."):
