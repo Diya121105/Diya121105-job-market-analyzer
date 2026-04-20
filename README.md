@@ -14,6 +14,9 @@ A real-time job market analysis dashboard built with Python and Streamlit.
 ## Tech Stack
 Python, Streamlit, Pandas, Plotly, Requests
 
+## Architecture
+Frontend: Streamlit → Backend: FastAPI → Data Source: Adzuna API
+
 ## How to Run
 pip install -r requirements.txt
 streamlit run app.py
