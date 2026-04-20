@@ -74,6 +74,28 @@ def extract_skills(df):
         skill_counts[skill] = count
     return pd.Series(skill_counts).sort_values(ascending=False)
 
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+def predict_skill_demand(skills):
+    # Use skill frequency to predict a demand score
+    skill_names = skills.index.tolist()
+    skill_values = skills.values.reshape(-1, 1)
+    
+    # Simple demand score = current count + predicted growth
+    indices = np.arange(len(skill_names)).reshape(-1, 1)
+    model = LinearRegression()
+    model.fit(indices, skill_values)
+    predicted = model.predict(indices)
+    
+    demand_df = pd.DataFrame({
+        "skill": skill_names,
+        "current_mentions": skills.values,
+        "demand_score": predicted.flatten().round(2)
+    }).sort_values("demand_score", ascending=False)
+    
+    return demand_df
+
 # --- Streamlit UI ---
 st.set_page_config(page_title="Job Market Analyzer", layout="wide")
 st.title("🔍 Job Market Trend Analyzer")
@@ -115,6 +137,19 @@ if st.sidebar.button("Fetch Jobs"):
         color_continuous_scale="blues"
     )
     st.plotly_chart(fig1, use_container_width=True)
+
+    # ML Prediction
+    st.subheader("🤖 ML-Based Skill Demand Prediction")
+    demand_df = predict_skill_demand(skills)
+    fig5 = px.bar(
+        demand_df,
+        x="skill",
+        y="demand_score",
+        color="demand_score",
+        color_continuous_scale="reds",
+        labels={"demand_score": "Predicted Demand Score"}
+    )
+    st.plotly_chart(fig5, use_container_width=True)
 
     # Top locations
     st.subheader("Top Hiring Locations")
